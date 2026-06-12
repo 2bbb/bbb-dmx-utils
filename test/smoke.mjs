@@ -1,10 +1,11 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import JSZip from 'jszip';
 
-const root = new URL('..', import.meta.url).pathname;
+const root = fileURLToPath(new URL('..', import.meta.url));
 const temp = join(tmpdir(), 'bbb-dmx-convert-smoke');
 rmSync(temp, { recursive: true, force: true });
 mkdirSync(temp, { recursive: true });
