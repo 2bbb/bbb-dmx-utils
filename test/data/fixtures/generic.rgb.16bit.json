@@ -1,0 +1,40 @@
+{
+  "schema": "bbb.dmx.fixture.profile.v1",
+  "key": "generic.rgb.16bit",
+  "manufacturer": "Generic",
+  "model": "RGB 16-bit pixel",
+  "modes": {
+    "rgb16": {
+      "label": "RGB 16-bit",
+      "footprint": 6,
+      "channels": [
+        { "offset": 1, "key": "red.coarse",   "default": 0 },
+        { "offset": 2, "key": "red.fine",     "default": 0 },
+        { "offset": 3, "key": "green.coarse", "default": 0 },
+        { "offset": 4, "key": "green.fine",   "default": 0 },
+        { "offset": 5, "key": "blue.coarse",  "default": 0 },
+        { "offset": 6, "key": "blue.fine",    "default": 0 }
+      ],
+      "parameters": {
+        "red": {
+          "type": "u16",
+          "channels": ["red.coarse", "red.fine"],
+          "byte_order": "coarsefine",
+          "default": 0
+        },
+        "green": {
+          "type": "u16",
+          "channels": ["green.coarse", "green.fine"],
+          "byte_order": "coarsefine",
+          "default": 0
+        },
+        "blue": {
+          "type": "u16",
+          "channels": ["blue.coarse", "blue.fine"],
+          "byte_order": "coarsefine",
+          "default": 0
+        }
+      }
+    }
+  }
+}

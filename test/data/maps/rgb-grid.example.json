@@ -1,0 +1,15 @@
+{
+  "schema": "bbb.dmx.matrixmap.v1",
+  "grid": {
+    "fixture_pattern": "pixel_%03d",
+    "start_index": 1,
+    "cols": 2,
+    "rows": 2,
+    "mode": "average",
+    "params": {
+      "red": "r",
+      "green": "g",
+      "blue": "b"
+    }
+  }
+}

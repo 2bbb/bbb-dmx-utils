@@ -1,0 +1,43 @@
+{
+  "schema": "bbb.dmx.fixture.profile.v1",
+  "key": "generic.rgb.24bit",
+  "manufacturer": "Generic",
+  "model": "RGB 24-bit pixel",
+  "modes": {
+    "rgb24": {
+      "label": "RGB 24-bit",
+      "footprint": 9,
+      "channels": [
+        { "offset": 1, "key": "red.coarse",    "default": 0 },
+        { "offset": 2, "key": "red.middle",    "default": 0 },
+        { "offset": 3, "key": "red.fine",      "default": 0 },
+        { "offset": 4, "key": "green.coarse",  "default": 0 },
+        { "offset": 5, "key": "green.middle",  "default": 0 },
+        { "offset": 6, "key": "green.fine",    "default": 0 },
+        { "offset": 7, "key": "blue.coarse",   "default": 0 },
+        { "offset": 8, "key": "blue.middle",   "default": 0 },
+        { "offset": 9, "key": "blue.fine",     "default": 0 }
+      ],
+      "parameters": {
+        "red": {
+          "type": "u24",
+          "channels": ["red.coarse", "red.middle", "red.fine"],
+          "byte_order": "coarsemidfine",
+          "default": 0
+        },
+        "green": {
+          "type": "u24",
+          "channels": ["green.coarse", "green.middle", "green.fine"],
+          "byte_order": "coarsemidfine",
+          "default": 0
+        },
+        "blue": {
+          "type": "u24",
+          "channels": ["blue.coarse", "blue.middle", "blue.fine"],
+          "byte_order": "coarsemidfine",
+          "default": 0
+        }
+      }
+    }
+  }
+}

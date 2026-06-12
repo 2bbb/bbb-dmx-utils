@@ -1,0 +1,11 @@
+{
+  "schema": "bbb.dmx.scene.v1",
+  "scenes": {
+    "blackout": {
+      "*": { "dimmer": 0.0, "red": 0.0, "green": 0.0, "blue": 0.0 }
+    },
+    "blue_grid": {
+      "pixel_*": { "red": 0.0, "green": 0.05, "blue": 1.0, "dimmer": 1.0 }
+    }
+  }
+}

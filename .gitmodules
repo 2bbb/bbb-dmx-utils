@@ -1,0 +1,3 @@
+[submodule "libs/bbb-dmx"]
+	path = libs/bbb-dmx
+	url = https://github.com/2bbb/bbb-dmx.git

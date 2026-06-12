@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GDTF>
+  <FixtureType Name="Tiny RGB Mover" LongName="Tiny RGB Mover" Manufacturer="ExampleCo">
+    <Geometries>
+      <Geometry Name="Body">
+        <Beam BeamAngle="4.5" FieldAngle="25.0" BeamRadius="0.052" LuminousFlux="1000" ColorTemperature="6500" />
+      </Geometry>
+    </Geometries>
+    <DMXModes>
+      <DMXMode Name="Basic">
+        <DMXChannels>
+          <DMXChannel Offset="1,2" Default="127/1">
+            <LogicalChannel Attribute="Pan">
+              <ChannelFunction Attribute="Pan" DMXFrom="0/2" PhysicalFrom="-270" PhysicalTo="270" />
+            </LogicalChannel>
+          </DMXChannel>
+          <DMXChannel Offset="3,4" Default="127/1">
+            <LogicalChannel Attribute="Tilt">
+              <ChannelFunction Attribute="Tilt" DMXFrom="0/2" PhysicalFrom="-135" PhysicalTo="135" />
+            </LogicalChannel>
+          </DMXChannel>
+          <DMXChannel Offset="5" Default="0/1">
+            <LogicalChannel Attribute="Dimmer">
+              <ChannelFunction Attribute="Dimmer" DMXFrom="0/1" />
+            </LogicalChannel>
+          </DMXChannel>
+          <DMXChannel Offset="6" Default="0/1">
+            <LogicalChannel Attribute="ColorAdd_R">
+              <ChannelFunction Attribute="ColorAdd_R" DMXFrom="0/1" />
+            </LogicalChannel>
+          </DMXChannel>
+          <DMXChannel Offset="7" Default="0/1">
+            <LogicalChannel Attribute="ColorAdd_G">
+              <ChannelFunction Attribute="ColorAdd_G" DMXFrom="0/1" />
+            </LogicalChannel>
+          </DMXChannel>
+          <DMXChannel Offset="8" Default="0/1">
+            <LogicalChannel Attribute="ColorAdd_B">
+              <ChannelFunction Attribute="ColorAdd_B" DMXFrom="0/1" />
+            </LogicalChannel>
+          </DMXChannel>
+          <DMXChannel Offset="9" Default="32/1">
+            <LogicalChannel Attribute="Shutter1">
+              <ChannelFunction Attribute="Shutter1" Name="Closed / Open" DMXFrom="0/1">
+                <ChannelSet Name="Closed" DMXFrom="0/1" />
+                <ChannelSet Name="Open" DMXFrom="32/1" />
+              </ChannelFunction>
+              <ChannelFunction Attribute="Shutter1Strobe" Name="Strobe" DMXFrom="64/1" PhysicalFrom="0.5" PhysicalTo="10.0" />
+              <ChannelFunction Attribute="Shutter1StrobePulse" Name="Pulse" DMXFrom="128/1" />
+              <ChannelFunction Attribute="Shutter1StrobeRandom" Name="Random" DMXFrom="192/1" />
+              <ChannelFunction Attribute="Shutter1" Name="Open" DMXFrom="224/1" />
+            </LogicalChannel>
+          </DMXChannel>
+        </DMXChannels>
+      </DMXMode>
+    </DMXModes>
+  </FixtureType>
+</GDTF>

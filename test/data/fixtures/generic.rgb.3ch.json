@@ -1,0 +1,34 @@
+{
+  "schema": "bbb.dmx.fixture.profile.v1",
+  "key": "generic.rgb.3ch",
+  "manufacturer": "Generic",
+  "model": "RGB 3-channel pixel",
+  "modes": {
+    "rgb": {
+      "label": "RGB",
+      "footprint": 3,
+      "channels": [
+        { "offset": 1, "key": "red",   "default": 0 },
+        { "offset": 2, "key": "green", "default": 0 },
+        { "offset": 3, "key": "blue",  "default": 0 }
+      ],
+      "parameters": {
+        "red": {
+          "type": "u8",
+          "channel": "red",
+          "default": 0
+        },
+        "green": {
+          "type": "u8",
+          "channel": "green",
+          "default": 0
+        },
+        "blue": {
+          "type": "u8",
+          "channel": "blue",
+          "default": 0
+        }
+      }
+    }
+  }
+}

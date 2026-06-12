@@ -1,0 +1,33 @@
+{
+  "schema": "bbb.dmx.patch.v2",
+  "coordinates": "gdtf",
+  "profiles": [
+    "../fixtures/generic.mover.16bit.json"
+  ],
+  "fixtures": [
+    {
+      "id": "spot_01",
+      "profile": "generic.mover.16bit",
+      "mode": "basic16",
+      "universe": 1,
+      "address": 1,
+      "position": [0.0, 0.0, 3.0],
+      "rotation": [0.0, 0.0, 0.0],
+      "calibration": {
+        "pan_offset": 0.0,
+        "tilt_offset": 0.0,
+        "pan_invert": false,
+        "tilt_invert": false
+      }
+    },
+    {
+      "id": "spot_02",
+      "profile": "generic.mover.16bit",
+      "mode": "basic16",
+      "universe": 1,
+      "address": 17,
+      "position": [2.0, 0.0, 3.0],
+      "rotation": [0.0, 0.0, 0.0]
+    }
+  ]
+}

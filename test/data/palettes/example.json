@@ -1,0 +1,8 @@
+{
+  "schema": "bbb.dmx.palette.v1",
+  "palettes": {
+    "warm_white": { "red": 1.0, "green": 0.72, "blue": 0.42 },
+    "deep_blue": { "red": 0.0, "green": 0.05, "blue": 1.0 },
+    "uv_hint": { "red": 0.18, "green": 0.0, "blue": 1.0 }
+  }
+}

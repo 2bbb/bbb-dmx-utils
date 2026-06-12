@@ -1,0 +1,8 @@
+{
+  "schema": "bbb.dmx.mask.v1",
+  "rules": [
+    { "universe": 1, "start": 1, "count": 16, "action": "hold" },
+    { "universe": 2, "start": 100, "count": 12, "action": "mute" },
+    { "universe": 0, "start": 512, "count": 1, "action": "force", "value": 0 }
+  ]
+}

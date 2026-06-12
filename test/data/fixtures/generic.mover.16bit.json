@@ -1,0 +1,79 @@
+{
+  "schema": "bbb.dmx.fixture.profile.v1",
+  "key": "generic.mover.16bit",
+  "manufacturer": "Generic",
+  "model": "16-bit Pan/Tilt Mover",
+  "modes": {
+    "basic16": {
+      "label": "Basic 16-bit",
+      "footprint": 8,
+      "channels": [
+        { "offset": 1, "key": "pan.coarse",  "default": 128 },
+        { "offset": 2, "key": "pan.fine",    "default": 0 },
+        { "offset": 3, "key": "tilt.coarse", "default": 128 },
+        { "offset": 4, "key": "tilt.fine",   "default": 0 },
+        { "offset": 5, "key": "dimmer",      "default": 0 },
+        { "offset": 6, "key": "shutter",     "default": 0 },
+        { "offset": 7, "key": "color",       "default": 0 },
+        { "offset": 8, "key": "gobo",        "default": 0 }
+      ],
+      "parameters": {
+        "pan": {
+          "type": "u16",
+          "channels": ["pan.coarse", "pan.fine"],
+          "byte_order": "coarsefine",
+          "range_degrees": 540,
+          "default": 32768
+        },
+        "tilt": {
+          "type": "u16",
+          "channels": ["tilt.coarse", "tilt.fine"],
+          "byte_order": "coarsefine",
+          "range_degrees": 270,
+          "default": 32768
+        },
+        "dimmer": {
+          "type": "u8",
+          "channel": "dimmer",
+          "default": 0
+        },
+        "shutter": {
+          "type": "u8",
+          "channel": "shutter",
+          "default": 32,
+          "ranges": [
+            { "from": 0, "to": 31, "function": "closed", "label": "Closed" },
+            { "from": 32, "to": 63, "function": "open", "label": "Open" },
+            { "from": 64, "to": 127, "function": "strobe", "label": "Strobe", "physical_from": 0.5, "physical_to": 10.0 },
+            { "from": 128, "to": 191, "function": "pulse", "label": "Pulse" },
+            { "from": 192, "to": 223, "function": "random", "label": "Random" },
+            { "from": 224, "to": 255, "function": "open", "label": "Open" }
+          ]
+        },
+        "color": {
+          "type": "u8",
+          "channel": "color",
+          "default": 0,
+          "ranges": [
+            { "from": 0, "to": 31, "function": "open", "label": "Open white" },
+            { "from": 32, "to": 63, "function": "red", "label": "Red" },
+            { "from": 64, "to": 95, "function": "green", "label": "Green" },
+            { "from": 96, "to": 127, "function": "blue", "label": "Blue" },
+            { "from": 128, "to": 255, "function": "rainbow", "label": "Rainbow" }
+          ]
+        },
+        "gobo": {
+          "type": "u8",
+          "channel": "gobo",
+          "default": 0,
+          "ranges": [
+            { "from": 0, "to": 31, "function": "open", "label": "Open" },
+            { "from": 32, "to": 63, "function": "gobo.1", "label": "Gobo 1" },
+            { "from": 64, "to": 95, "function": "gobo.2", "label": "Gobo 2" },
+            { "from": 96, "to": 255, "function": "shake", "label": "Gobo shake" }
+          ]
+        }
+      }
+    }
+  }
+}

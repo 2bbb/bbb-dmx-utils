@@ -1,0 +1,7 @@
+{
+  "schema": "bbb.dmx.assert.v1",
+  "rules": [
+    { "name": "master stays safe", "universe": 1, "start": 1, "end": 4, "min": 0, "max": 255 },
+    { "name": "blackout channel", "universe": 1, "channel": 10, "equals": 0 }
+  ]
+}

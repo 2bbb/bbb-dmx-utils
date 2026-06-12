@@ -1,0 +1,7 @@
+{
+  "schema": "bbb.dmx.curve.v1",
+  "rules": [
+    { "universe": 0, "start": 1, "count": 512, "curve": "gamma", "gamma": 2.2 },
+    { "universe": 2, "start": 1, "count": 64, "points": [[0.0, 0.0], [0.2, 0.05], [1.0, 1.0]] }
+  ]
+}
