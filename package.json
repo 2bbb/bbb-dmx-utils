@@ -5,12 +5,15 @@
   "type": "module",
   "bin": {
     "bbb-dmx-convert": "dist/index.js",
-    "bbb-dmx-lint": "dist/lint.js"
+    "bbb-dmx-lint": "dist/lint.js",
+    "bbb-dmx-fixture-editor": "dist/web.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
-    "smoke": "npm run build && node dist/index.js --help && node test/smoke.mjs"
+    "smoke": "npm run build && node dist/index.js --help && node test/smoke.mjs && node test/web-smoke.mjs",
+    "web": "node dist/web.js",
+    "web:smoke": "npm run build && node test/web-smoke.mjs"
   },
   "dependencies": {
     "ajv": "^8.20.0",
@@ -26,5 +29,5 @@
   "engines": {
     "node": ">=20"
   },
-  "description": "Node.js CLI utilities for bbb.dmx fixture conversion and JSON linting."
+  "description": "Node.js utilities for bbb.dmx fixture conversion, JSON linting, and local fixture editing."
 }

@@ -5,6 +5,7 @@ import JSZip from "jszip";
 import { z } from "zod";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 const photometrySchema = z.object({
     beam_angle_degrees: z.number().positive().optional(),
     field_angle_degrees: z.number().positive().optional(),
@@ -962,7 +963,13 @@ program.command("inspect")
         warnings: result.warnings,
     }, null, 2));
 });
-program.parseAsync(process.argv).catch((error) => {
-    console.error(`bbb-dmx-convert: ${error instanceof Error ? error.message : String(error)}`);
-    process.exitCode = 1;
-});
+function isCliEntrypoint() {
+    return process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+}
+if (isCliEntrypoint()) {
+    program.parseAsync(process.argv).catch((error) => {
+        console.error(`bbb-dmx-convert: ${error instanceof Error ? error.message : String(error)}`);
+        process.exitCode = 1;
+    });
+}
+export { convertInput, inferFormat };

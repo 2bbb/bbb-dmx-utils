@@ -1,15 +1,17 @@
 # bbb-dmx-utils
 
-Node.js/TypeScript CLI utilities for the `bbb.dmx` JSON ecosystem.
+Node.js/TypeScript utilities for the `bbb.dmx` JSON ecosystem.
 
-This repo intentionally contains CLI tooling only. The shared C++ headers,
-format documentation, and JSON Schemas live in the `2bbb/bbb-dmx` submodule at
+This repo contains import/conversion CLIs plus a local browser editor for
+fixture profiles and fixture coordinates. The shared C++ headers, format
+documentation, and JSON Schemas live in the `2bbb/bbb-dmx` submodule at
 `libs/bbb-dmx`. Max/MSP externals live in `2bbb/bbb.dmx`.
 
 ## Commands
 
 - `bbb-dmx-convert` — convert `.gdtf`, `.mvr`, direct GDTF `description.xml`, and compatible MA3 fixture XML into `bbb.dmx` JSON.
 - `bbb-dmx-lint` — validate `bbb.dmx` JSON files against schemas and semantic cross-file checks.
+- `bbb-dmx-fixture-editor` — start a local Web UI for import, customization, schema validation, and JSON export.
 
 ## Development
 
@@ -19,6 +21,29 @@ npm install
 npm run build
 npm run smoke
 ```
+
+
+## Fixture editor Web UI
+
+`bbb-dmx-fixture-editor` starts a local Node-hosted browser UI for fixture/profile and patch-coordinate editing. It is intentionally local-first: import vendor files, review generated profiles/patches, customize fixture coordinates and JSON, validate against the shared schemas, then download the edited JSON files.
+
+```sh
+git submodule update --init --recursive
+npm install
+npm run build
+npm run web -- --port 4173
+# open http://127.0.0.1:4173
+```
+
+The editor currently supports:
+
+- `.gdtf`, `.mvr`, GDTF `description.xml`, and compatible MA3 XML conversion through the same converter core as `bbb-dmx-convert`.
+- profile metadata/key editing plus raw profile JSON editing.
+- MVR patch fixture coordinate editing (`universe`, `address`, `position`, `rotation`).
+- schema validation through `libs/bbb-dmx/schemas`.
+- per-file JSON download and bulk download.
+
+This is not a lighting-console UI and it does not output DMX. Treat conversion warnings as blockers until checked.
 
 ## Examples
 
