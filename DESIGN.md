@@ -2,7 +2,7 @@
 
 ## Source of truth
 - Status: Draft
-- Last refreshed: 2026-06-12
+- Last refreshed: 2026-06-13
 - Primary product surfaces: Node-hosted browser fixture/fixture-coordinate editor for `bbb.dmx` JSON.
 - Evidence reviewed:
   - `README.md`: CLI utilities currently convert GDTF/MVR/MA3 and lint JSON.
@@ -19,7 +19,7 @@
 - Goals:
   - Import GDTF/MVR/MA3-related files and convert them into `bbb.dmx` profiles/patches.
   - Let users customize fixture metadata, channel definitions, and patch coordinates without hand-editing every JSON file.
-  - Validate edited data against the shared `bbb-dmx` schemas before export.
+  - Validate edited data against the shared `bbb-dmx` schemas and semantic lint rules before export.
 - Non-goals:
   - DMX network output.
   - Full lighting-console replacement.
@@ -49,8 +49,8 @@
   - `/api/health`: server readiness.
 - Content hierarchy:
   - Import controls and warnings first.
-  - Profile list and selected profile editor.
-  - Patch fixture coordinate table.
+  - Profile list and selected profile/mode/channel/parameter editor.
+  - Patch fixture profile/mode/address/coordinate table.
   - Raw JSON and validation/export actions.
 
 ## Design principles
@@ -71,9 +71,11 @@
 - New/changed components:
   - File import panel.
   - Profile selector/editor.
-  - Patch coordinate table.
+  - Mode channel table.
+  - Basic parameter/function reference table.
+  - Patch profile/mode/address/coordinate table.
   - JSON textarea editor.
-  - Validation/warning panel.
+  - Schema and semantic lint warning/error panel.
   - Download/export controls.
 - Variants and states: loading, empty import, conversion warnings, validation errors, success.
 - Token/component ownership: local CSS in the generated HTML until the UI grows enough to justify a component system.
@@ -108,8 +110,8 @@
 - Design-token constraints: local CSS variables only.
 - Performance constraints: handle typical fixture/MVR files locally; do not block UI with unnecessary network calls.
 - Compatibility constraints: Node >=20, modern evergreen browsers.
-- Test/screenshot expectations: API smoke tests must cover health, convert, and validate. Visual regression is not required for MVP.
+- Test/screenshot expectations: API smoke tests must cover health, convert, schema validation, semantic lint failures, page rendering, and client-script syntax. Visual regression is not required for MVP.
 
 ## Open questions
 - [ ] Whether to add a 2D/3D coordinate viewport after the data editor stabilizes / owner: project / impact: medium.
-- [ ] Whether semantic linting from `src/lint.ts` should be exposed directly in the web API / owner: project / impact: high.
+- [ ] Whether full range/function editing should become structured UI or remain raw JSON-first / owner: project / impact: medium.

@@ -215,19 +215,21 @@ async function loadProfilesForPatch(patch, patchFile, ajv, options, diagnostics)
     }
     return profiles;
 }
-async function lintPatch(patch, file, ajv, options, diagnostics) {
+function lintPatchAgainstProfiles(patch, file, profiles, diagnostics, reportMissingProfiles = true) {
     const fixtureIds = new Set();
     for (const fixture of patch.fixtures) {
         if (fixtureIds.has(fixture.id))
             add(diagnostics, "error", file, `duplicate fixture id '${fixture.id}'`);
         fixtureIds.add(fixture.id);
     }
-    const profiles = await loadProfilesForPatch(patch, file, ajv, options, diagnostics);
     const occupied = new Map();
     for (const fixture of patch.fixtures) {
         const profile = profiles.get(fixture.profile);
-        if (!profile)
+        if (!profile) {
+            if (reportMissingProfiles)
+                add(diagnostics, "error", file, `fixture '${fixture.id}' references unknown profile '${fixture.profile}'`);
             continue;
+        }
         const mode = profile.modes[fixture.mode];
         if (!mode) {
             add(diagnostics, "error", file, `fixture '${fixture.id}' references unknown mode '${fixture.mode}' on profile '${fixture.profile}'`);
@@ -249,6 +251,10 @@ async function lintPatch(patch, file, ajv, options, diagnostics) {
         }
     }
 }
+async function lintPatch(patch, file, ajv, options, diagnostics) {
+    const profiles = await loadProfilesForPatch(patch, file, ajv, options, diagnostics);
+    lintPatchAgainstProfiles(patch, file, profiles, diagnostics, false);
+}
 async function lintFile(file, ajv, options, diagnostics) {
     let data;
     try {
@@ -265,6 +271,32 @@ async function lintFile(file, ajv, options, diagnostics) {
         lintProfile(data, file, diagnostics);
     if (id === "bbb.dmx.patch.v2")
         await lintPatch(data, file, ajv, options, diagnostics);
+}
+async function lintDocumentsInMemory(documents, options = {}) {
+    const schemaDir = path.resolve(options.schemaDir ?? defaultSchemaDir());
+    const ajv = await loadAjv(schemaDir);
+    const diagnostics = [];
+    const profiles = new Map();
+    const patches = [];
+    for (const doc of documents) {
+        const file = typeof doc.name === "string" && doc.name.length > 0 ? doc.name : "unnamed.json";
+        const data = doc.data;
+        if (!validateSchema(ajv, file, data, diagnostics, schemaDir))
+            continue;
+        const id = schemaId(data);
+        if (id === "bbb.dmx.fixture.profile.v1") {
+            const profile = data;
+            lintProfile(profile, file, diagnostics);
+            if (profiles.has(profile.key))
+                add(diagnostics, "error", file, `duplicate in-memory profile key '${profile.key}'`);
+            profiles.set(profile.key, profile);
+        }
+        if (id === "bbb.dmx.patch.v2")
+            patches.push({ file, patch: data });
+    }
+    for (const { file, patch } of patches)
+        lintPatchAgainstProfiles(patch, file, profiles, diagnostics);
+    return { ok: collectExitCode(diagnostics, Boolean(options.strict)) === 0, diagnostics };
 }
 function printDiagnostics(diagnostics, json) {
     if (json) {
@@ -313,7 +345,13 @@ program
     printDiagnostics(diagnostics, options.json);
     process.exitCode = collectExitCode(diagnostics, options.strict);
 });
-program.parseAsync(process.argv).catch((error) => {
-    console.error(`bbb-dmx-lint: ${error instanceof Error ? error.message : String(error)}`);
-    process.exitCode = 1;
-});
+function isCliEntrypoint() {
+    return process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+}
+if (isCliEntrypoint()) {
+    program.parseAsync(process.argv).catch((error) => {
+        console.error(`bbb-dmx-lint: ${error instanceof Error ? error.message : String(error)}`);
+        process.exitCode = 1;
+    });
+}
+export { defaultSchemaDir, lintDocumentsInMemory };
