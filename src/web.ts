@@ -145,14 +145,14 @@ textarea { min-height:360px; font-family: ui-monospace, SFMono-Regular, Menlo, C
 <main>
   <section>
     <h2>Import</h2>
-    <input id="file" type="file" accept=".gdtf,.mvr,.xml">
+    <input id="file" type="file" accept=".gdtf,.mvr,.xml,.json" multiple>
     <label for="format">Format</label>
     <select id="format"><option value="auto">auto</option><option value="gdtf">gdtf</option><option value="gdtf-xml">gdtf-xml</option><option value="mvr">mvr</option><option value="ma3">ma3</option></select>
     <label for="prefix">Profile prefix</label>
     <input id="prefix" placeholder="optional.prefix">
-    <button id="convert">Convert import</button>
+    <button id="convert">Import / convert</button>
     <div class="actions"><button id="validate" disabled>Validate</button><button id="downloadAll" disabled>Download all</button><button id="reset">Reset</button></div>
-    <label>Status</label><div id="status" class="status">No file loaded.</div>
+    <label>Status</label><div id="status" class="status">No file loaded. Select GDTF/MVR/XML to convert, or one or more bbb.dmx JSON files to reopen.</div>
     <h2 style="margin-top:16px">Profiles</h2>
     <div id="profiles" class="list small">No profiles.</div>
   </section>
@@ -195,6 +195,38 @@ function parseJson(id) { return JSON.parse($(id).value); }
 function download(name, data) { const blob = new Blob([typeof data === 'string' ? data : pretty(data)+'\n'], {type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
 async function copyText(text) { await navigator.clipboard.writeText(text); status('Copied JSON.', 'ok'); }
 async function fileToBase64(file) { const buf = await file.arrayBuffer(); let binary=''; const bytes=new Uint8Array(buf); for(let i=0;i<bytes.length;i++) binary += String.fromCharCode(bytes[i]); return btoa(binary); }
+async function fileToText(file) { return await file.text(); }
+function isJsonFile(file) { return file.name.toLowerCase().endsWith('.json'); }
+function profileEntry(profile, name, source='json') { return { profile, source, suggestedFile: name || ((profile?.key ?? 'profile') + '.json') }; }
+function looksLikeProfile(value) { return value && typeof value === 'object' && !Array.isArray(value) && (value.schema === 'bbb.dmx.fixture.profile.v1' || (typeof value.key === 'string' && value.modes && typeof value.modes === 'object')); }
+function looksLikePatch(value) { return value && typeof value === 'object' && !Array.isArray(value) && (value.schema === 'bbb.dmx.patch.v2' || Array.isArray(value.fixtures)); }
+function collectJsonDocument(value, name, out) {
+  if(looksLikeProfile(value)) { out.profiles.push(profileEntry(value, name)); return; }
+  if(value && typeof value === 'object' && looksLikeProfile(value.profile)) { out.profiles.push(profileEntry(value.profile, value.suggestedFile ?? name, value.source ?? 'json')); return; }
+  if(looksLikePatch(value)) { out.patches.push(value); return; }
+  if(Array.isArray(value)) { for(const [index, entry] of value.entries()) collectJsonDocument(entry, name.replace(/\.json$/i, '') + '-' + (index + 1) + '.json', out); return; }
+  if(value && typeof value === 'object' && Array.isArray(value.profiles)) {
+    for(const [index, entry] of value.profiles.entries()) collectJsonDocument(entry, entry?.suggestedFile ?? name.replace(/\.json$/i, '') + '-profile-' + (index + 1) + '.json', out);
+    if(value.patch) collectJsonDocument(value.patch, name.replace(/\.json$/i, '') + '-patch.json', out);
+    return;
+  }
+  out.unknown.push(name);
+}
+async function importJsonFiles(files) {
+  const out = { profiles: [], patches: [], unknown: [] };
+  for(const file of files) {
+    const parsed = JSON.parse(await fileToText(file));
+    collectJsonDocument(parsed, file.name, out);
+  }
+  if(out.patches.length > 1) throw new Error('Multiple patch JSON files selected. Load one patch at a time.');
+  if(out.profiles.length === 0 && out.patches.length === 0) throw new Error('No bbb.dmx fixture profile or patch JSON found. Unknown: ' + out.unknown.join(', '));
+  state.profiles = out.profiles;
+  state.patch = out.patches[0] ?? null;
+  state.warnings = out.unknown.map((name)=>({source:name, message:'ignored unknown JSON document'}));
+  state.selected = 0;
+  renderAll();
+  status('Loaded JSON: '+state.profiles.length+' profile(s), '+(state.patch?.fixtures?.length ?? 0)+' patch fixture(s).'+(state.warnings.length?'\nWarnings:\n'+state.warnings.map(w=>'- '+w.source+': '+w.message).join('\n'):''), state.warnings.length?'warn':'ok');
+}
 function selectedProfile() { return state.profiles[state.selected]?.profile ?? null; }
 function selectedEntry() { return state.profiles[state.selected] ?? null; }
 function clear(el) { el.replaceChildren(); }
@@ -215,7 +247,7 @@ function updateFixture(i,row) { const f=state.patch.fixtures[i]; for(const input
 function updateChannel(i,row) { const mode=selectedMode(); if(!mode) return; const c=mode.channels[i]; for(const input of row.querySelectorAll('input')) { const k=input.dataset.k; if(k==='offset') c.offset=Number(input.value); if(k==='key') c.key=input.value; if(k==='label') { if(input.value) c.label=input.value; else delete c.label; } if(k==='default') { if(input.value === '') delete c.default; else c.default=Number(input.value); } } refreshProfileJson(); }
 function updateParameter(oldKey,row) { const mode=selectedMode(); if(!mode) return; mode.parameters ??= {}; const current=mode.parameters[oldKey] ?? {type:'u8'}; const fields=Object.fromEntries([...row.querySelectorAll('input')].map(input=>[input.dataset.k,input.value])); const newKey=(fields.paramKey ?? oldKey).trim(); if(!newKey) { status('Parameter key cannot be empty.', 'err'); renderParameters(); return; } const next={...current}; next.type=(fields.type ?? next.type ?? 'u8').trim() || 'u8'; const channels=(fields.channels ?? '').split(',').map(v=>v.trim()).filter(Boolean); delete next.channel; delete next.channels; if(channels.length===1) next.channel=channels[0]; else if(channels.length>1) next.channels=channels; if(fields.byte_order) next.byte_order=fields.byte_order.trim(); else delete next.byte_order; if(fields.range_degrees) next.range_degrees=Number(fields.range_degrees); else delete next.range_degrees; if(newKey !== oldKey) delete mode.parameters[oldKey]; mode.parameters[newKey]=next; refreshProfileJson(); renderParameters(); }
 function renderAll() { renderProfiles(); syncProfileFormFromState(); renderPatch(); const has=state.profiles.length>0 || state.patch; $('validate').disabled=!has; $('downloadAll').disabled=!has; $('downloadProfile').disabled=!selectedProfile(); $('downloadPatch').disabled=!state.patch; }
-async function convert() { const file=$('file').files[0]; if(!file) { status('Choose a GDTF/MVR/XML file first.', 'err'); return; } $('convert').disabled=true; status('Converting...'); try { const result=await fetch('/api/convert',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:file.name,format:$('format').value,profilePrefix:$('prefix').value,contentBase64:await fileToBase64(file)})}); const json=await result.json(); if(!result.ok) throw new Error(json.error ?? 'convert failed'); state.profiles=json.profiles ?? []; state.patch=json.patch ?? null; state.warnings=json.warnings ?? []; state.selected=0; renderAll(); status('Converted '+state.profiles.length+' profile(s), '+(state.patch?.fixtures?.length ?? 0)+' patch fixture(s).'+(state.warnings.length?'\nWarnings:\n'+state.warnings.map(w=>'- '+w.source+': '+w.message).join('\n'):''), state.warnings.length?'warn':'ok'); } catch(e) { status(e.message ?? String(e), 'err'); } finally { $('convert').disabled=false; } }
+async function convert() { const files=Array.from($('file').files ?? []); if(files.length===0) { status('Choose GDTF/MVR/XML to convert or bbb.dmx JSON to reopen.', 'err'); return; } $('convert').disabled=true; try { if(files.every(isJsonFile)) { status('Loading JSON...'); await importJsonFiles(files); return; } if(files.some(isJsonFile)) throw new Error('Do not mix JSON with GDTF/MVR/XML imports. Load converted JSON separately.'); if(files.length !== 1) throw new Error('Converter input must be a single GDTF/MVR/XML file. JSON import supports multiple files.'); const file=files[0]; status('Converting...'); const result=await fetch('/api/convert',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:file.name,format:$('format').value,profilePrefix:$('prefix').value,contentBase64:await fileToBase64(file)})}); const json=await result.json(); if(!result.ok) throw new Error(json.error ?? 'convert failed'); state.profiles=json.profiles ?? []; state.patch=json.patch ?? null; state.warnings=json.warnings ?? []; state.selected=0; renderAll(); status('Converted '+state.profiles.length+' profile(s), '+(state.patch?.fixtures?.length ?? 0)+' patch fixture(s).'+(state.warnings.length?'\nWarnings:\n'+state.warnings.map(w=>'- '+w.source+': '+w.message).join('\n'):''), state.warnings.length?'warn':'ok'); } catch(e) { status(e.message ?? String(e), 'err'); } finally { $('convert').disabled=false; } }
 async function validate() { const docs=[]; for(const entry of state.profiles) docs.push({name:entry.suggestedFile ?? entry.profile.key+'.json', data:entry.profile}); if(state.patch) docs.push({name:'patch.json', data:state.patch}); status('Validating and linting...'); const res=await fetch('/api/validate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({documents:docs})}); const json=await res.json(); if(!res.ok) { status(json.error ?? 'validate failed', 'err'); return; } status(json.ok ? 'Schema and semantic lint passed.' : json.diagnostics.map(d=>d.severity+': '+d.file+': '+d.message).join('\n'), json.ok?'ok':'err'); }
 $('convert').onclick=convert; $('validate').onclick=validate; $('reset').onclick=()=>{ state.profiles=[]; state.patch=null; state.warnings=[]; state.selected=0; renderAll(); status('Reset.'); };
 $('manufacturer').onchange=syncProfileStateFromForm; $('model').onchange=syncProfileStateFromForm; $('profileKey').onchange=syncProfileStateFromForm;

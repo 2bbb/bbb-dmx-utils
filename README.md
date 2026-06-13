@@ -25,7 +25,7 @@ npm run smoke
 
 ## Fixture editor Web UI
 
-`bbb-dmx-fixture-editor` starts a local Node-hosted browser UI for fixture/profile and patch-coordinate editing. It is intentionally local-first: import vendor files, review generated profiles/patches, customize fixture coordinates and JSON, validate/lint against the shared schemas and semantic rules, then download the edited JSON files.
+`bbb-dmx-fixture-editor` starts a local Node-hosted browser UI for fixture/profile and patch-coordinate editing. It is intentionally local-first: import vendor files or reopen converted `bbb.dmx` JSON, review generated profiles/patches, customize fixture coordinates and JSON, validate/lint against the shared schemas and semantic rules, then download the edited JSON files.
 
 ```sh
 git submodule update --init --recursive
@@ -38,6 +38,7 @@ npm run web -- --port 4173
 The editor currently supports:
 
 - `.gdtf`, `.mvr`, GDTF `description.xml`, and compatible MA3 XML conversion through the same converter core as `bbb-dmx-convert`.
+- reopening converted `bbb.dmx` JSON files: fixture profiles, one patch file, converter result JSON, or arrays of profile documents.
 - profile metadata/key editing, mode channel editing, basic parameter/function reference editing, plus raw profile JSON editing.
 - MVR patch fixture editing (`profile`, `mode`, `universe`, `address`, `position`, `rotation`).
 - schema validation through `libs/bbb-dmx/schemas`.

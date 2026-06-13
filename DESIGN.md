@@ -26,6 +26,7 @@
   - Pixel-perfect visual fixture rendering in the first implementation.
 - Success signals:
   - A user can import an MVR, adjust fixture positions/rotations/addresses, validate, and export JSON without touching a terminal.
+  - A user can reopen previously converted `bbb.dmx` JSON profiles/patches and continue editing without returning to the original vendor file.
   - Warnings and validation failures are visible and actionable.
 
 ## Personas and jobs
@@ -69,7 +70,7 @@
 ## Components
 - Existing components to reuse: none; no prior frontend in repo.
 - New/changed components:
-  - File import panel.
+  - File import panel for vendor files and previously converted `bbb.dmx` JSON.
   - Profile selector/editor.
   - Mode channel table.
   - Basic parameter/function reference table.

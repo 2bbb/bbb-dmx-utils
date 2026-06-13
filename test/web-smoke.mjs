@@ -56,6 +56,8 @@ try {
 
   const page = await fetch(`${base}/`).then((res) => res.text());
   if(!page.includes('fixture / coordinate editor')) throw new Error('editor page did not render');
+  if(!page.includes('accept=\".gdtf,.mvr,.xml,.json\" multiple')) throw new Error('editor page does not accept converted JSON files');
+  if(!page.includes('function importJsonFiles')) throw new Error('editor page did not include JSON import logic');
   const script = page.match(/<script>([\s\S]*?)<\/script>/)?.[1];
   if(!script) throw new Error('editor page did not include client script');
   new Function(script);
