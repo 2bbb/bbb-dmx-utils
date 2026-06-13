@@ -18,7 +18,7 @@ documentation, and JSON Schemas live in the `2bbb/bbb-dmx` submodule at
 ```sh
 git submodule update --init --recursive
 npm install
-npm run build
+npm run build  # generates ignored dist/ CLI entrypoints
 npm run smoke
 ```
 
