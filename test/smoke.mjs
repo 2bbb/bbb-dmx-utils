@@ -14,6 +14,10 @@ function run(args) {
   execFileSync(process.execPath, [join(root, 'dist/index.js'), ...args], { stdio: 'inherit' });
 }
 
+function cliOutput(bin, args) {
+  return execFileSync(process.execPath, [join(root, `dist/${bin}.js`), ...args], { encoding: 'utf8' });
+}
+
 function readJson(file) {
   return JSON.parse(readFileSync(file, 'utf8'));
 }
@@ -22,6 +26,15 @@ function assertClose(actual, expected, label, epsilon = 1.0e-6) {
   if(Math.abs(actual - expected) > epsilon) {
     throw new Error(`${label}: expected ${expected}, got ${actual}`);
   }
+}
+
+const convertNoArgHelp = cliOutput('index', []);
+if(!convertNoArgHelp.includes('Usage: bbb-dmx-convert') || !convertNoArgHelp.includes('Commands:')) {
+  throw new Error(`bbb-dmx-convert without args should print CLI help, got: ${convertNoArgHelp}`);
+}
+const lintNoArgHelp = cliOutput('lint', []);
+if(!lintNoArgHelp.includes('Usage: bbb-dmx-lint') || !lintNoArgHelp.includes('--fixture-dir')) {
+  throw new Error(`bbb-dmx-lint without args should print CLI help, got: ${lintNoArgHelp}`);
 }
 
 run(['convert', join(root, 'test/minimal.gdtf.xml'), '--format', 'gdtf-xml', '--out-dir', join(temp, 'xml'), '--overwrite']);

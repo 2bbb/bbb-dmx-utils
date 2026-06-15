@@ -1133,10 +1133,15 @@ function isCliEntrypoint(): boolean {
 }
 
 if(isCliEntrypoint()) {
-  program.parseAsync(process.argv).catch((error: unknown) => {
-    console.error(`bbb-dmx-convert: ${error instanceof Error ? error.message : String(error)}`);
-    process.exitCode = 1;
-  });
+  if(process.argv.length <= 2) {
+    program.outputHelp();
+    process.exitCode = 0;
+  } else {
+    program.parseAsync(process.argv).catch((error: unknown) => {
+      console.error(`bbb-dmx-convert: ${error instanceof Error ? error.message : String(error)}`);
+      process.exitCode = 1;
+    });
+  }
 }
 
 export type { FixtureProfile, FixtureMode, FixtureChannel, FixtureParameter, PatchFile, Warning, ConvertedProfile, ConvertResult, ConvertOptions };
