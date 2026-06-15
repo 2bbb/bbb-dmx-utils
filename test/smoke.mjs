@@ -19,7 +19,11 @@ function cliOutput(bin, args) {
 }
 
 function npmOutput(args) {
-  return execFileSync('npm', ['run', ...args], { cwd: root, encoding: 'utf8' });
+  if(process.env.npm_execpath) {
+    return execFileSync(process.execPath, [process.env.npm_execpath, 'run', ...args], { cwd: root, encoding: 'utf8' });
+  }
+  const npmBinary = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+  return execFileSync(npmBinary, ['run', ...args], { cwd: root, encoding: 'utf8' });
 }
 
 function readJson(file) {
