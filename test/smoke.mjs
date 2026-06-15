@@ -37,7 +37,7 @@ function assertClose(actual, expected, label, epsilon = 1.0e-6) {
 }
 
 const convertNoArgHelp = cliOutput('index', []);
-if(!convertNoArgHelp.includes('Usage: bbb-dmx-convert') || !convertNoArgHelp.includes('Commands:')) {
+if(!convertNoArgHelp.includes('Usage: bbb-dmx-convert') || !convertNoArgHelp.includes('Commands:') || !convertNoArgHelp.includes('Supported inputs:') || !convertNoArgHelp.includes('npm examples:')) {
   throw new Error(`bbb-dmx-convert without args should print CLI help, got: ${convertNoArgHelp}`);
 }
 const lintNoArgHelp = cliOutput('lint', []);
@@ -45,8 +45,12 @@ if(!lintNoArgHelp.includes('Usage: bbb-dmx-lint') || !lintNoArgHelp.includes('--
   throw new Error(`bbb-dmx-lint without args should print CLI help, got: ${lintNoArgHelp}`);
 }
 const npmConvertHelp = npmOutput(['convert', '--', '--help']);
-if(!npmConvertHelp.includes('Usage: bbb-dmx-convert')) {
+if(!npmConvertHelp.includes('Usage: bbb-dmx-convert') || !npmConvertHelp.includes('Supported inputs:')) {
   throw new Error(`npm run convert should expose converter help, got: ${npmConvertHelp}`);
+}
+const npmConvertCommandHelp = npmOutput(['convert', '--', 'convert', '--help']);
+if(!npmConvertCommandHelp.includes('Output layout:') || !npmConvertCommandHelp.includes('--patch is mainly for scene formats such as MVR')) {
+  throw new Error(`npm run convert -- convert --help should explain output behavior, got: ${npmConvertCommandHelp}`);
 }
 const npmLintHelp = npmOutput(['lint', '--', '--help']);
 if(!npmLintHelp.includes('Usage: bbb-dmx-lint')) {

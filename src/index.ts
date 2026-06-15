@@ -1079,9 +1079,29 @@ const program = new Command();
 program
   .name("bbb-dmx-convert")
   .description("Convert GDTF/MVR/MA3 fixture datasets to bbb.dmx JSON profiles and patches.")
-  .version("0.1.0");
+  .version("0.1.0")
+  .addHelpText("after", `
+Supported inputs:
+  .gdtf       Zipped GDTF fixture archive. Emits fixture profile JSON.
+  .mvr        MVR scene archive. Emits embedded fixture profiles and, with --patch, patch JSON.
+  .xml        GDTF description XML or compatible grandMA3 fixture XML.
+
+Common examples:
+  bbb-dmx-convert convert fixture.gdtf --out-dir converted --overwrite
+  bbb-dmx-convert convert description.xml --format gdtf-xml --out-dir converted
+  bbb-dmx-convert convert scene.mvr --patch patches/from-mvr.json --out-dir converted --overwrite
+  bbb-dmx-convert inspect scene.mvr
+
+npm examples:
+  npm run convert -- convert scene.mvr --patch patches/from-mvr.json --out-dir converted --overwrite
+  npm run convert -- inspect fixture.gdtf
+
+Related:
+  bbb-dmx-lint validates generated bbb.dmx JSON files.
+`);
 
 program.command("convert")
+  .description("convert a fixture or scene dataset into bbb.dmx JSON files")
   .argument("<input>", "input .gdtf, .mvr, GDTF description XML, or compatible MA3 XML")
   .option("-f, --format <format>", "auto|gdtf|gdtf-xml|mvr|ma3", parseFormat, "auto")
   .option("-o, --out-dir <dir>", "output root directory", "converted")
@@ -1091,6 +1111,34 @@ program.command("convert")
   .option("--overwrite", "overwrite existing output files", false)
   .option("--strict", "fail if warnings were emitted", false)
   .option("--no-pretty", "write compact JSON")
+  .addHelpText("after", `
+Formats:
+  auto      Infer from extension/content. Recommended for normal use.
+  gdtf      Zipped .gdtf archive containing description.xml.
+  gdtf-xml  Raw GDTF description XML.
+  mvr       Zipped .mvr scene archive. Can also contain embedded GDTF files.
+  ma3       Compatible grandMA3 fixture XML.
+
+Output layout:
+  Profiles are written to:
+    <out-dir>/<fixture-dir>/<manufacturer.model>.json
+  Patch JSON is written only when --patch is specified:
+    <out-dir>/<patch>
+
+Important behavior:
+  --patch is mainly for scene formats such as MVR. A plain GDTF usually has no fixture placement.
+  --fixture-dir is relative to --out-dir, not the current directory.
+  --profile-prefix prefixes generated profile keys, useful when merging vendor libraries.
+  --strict makes warnings fatal. Use it for CI, not for exploratory imports.
+  Existing files are protected unless --overwrite is passed.
+
+Examples:
+  bbb-dmx-convert convert fixture.gdtf --out-dir converted --overwrite
+  bbb-dmx-convert convert description.xml --format gdtf-xml --out-dir converted
+  bbb-dmx-convert convert scene.mvr --patch patches/from-mvr.json --out-dir converted --overwrite
+  bbb-dmx-convert convert scene.mvr --patch from-mvr.json --fixture-dir profiles --profile-prefix show2026
+  npm run convert -- convert scene.mvr --patch patches/from-mvr.json --out-dir converted --overwrite
+`)
   .action(async (input: string, opts: Record<string, unknown>) => {
     const options: ConvertOptions = {
       format: String(opts.format ?? "auto"),
@@ -1107,8 +1155,15 @@ program.command("convert")
   });
 
 program.command("inspect")
+  .description("inspect what would be converted without writing output files")
   .argument("<input>", "input file")
   .option("-f, --format <format>", "auto|gdtf|gdtf-xml|mvr|ma3", parseFormat, "auto")
+  .addHelpText("after", `
+Examples:
+  bbb-dmx-convert inspect fixture.gdtf
+  bbb-dmx-convert inspect scene.mvr --format mvr
+  npm run convert -- inspect scene.mvr
+`)
   .action(async (input: string, opts: Record<string, unknown>) => {
     const options: ConvertOptions = {
       format: String(opts.format ?? "auto"),
