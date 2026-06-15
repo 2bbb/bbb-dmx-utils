@@ -11,6 +11,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
+    "convert": "npm run build --silent && node dist/index.js",
+    "lint": "npm run build --silent && node dist/lint.js",
+    "fixture-editor": "npm run build --silent && node dist/web.js",
     "smoke": "npm run build && node dist/index.js --help && node test/smoke.mjs && node test/web-smoke.mjs",
     "web": "node dist/web.js",
     "web:smoke": "npm run build && node test/web-smoke.mjs"

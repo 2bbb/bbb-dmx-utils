@@ -18,6 +18,10 @@ function cliOutput(bin, args) {
   return execFileSync(process.execPath, [join(root, `dist/${bin}.js`), ...args], { encoding: 'utf8' });
 }
 
+function npmOutput(args) {
+  return execFileSync('npm', ['run', ...args], { cwd: root, encoding: 'utf8' });
+}
+
 function readJson(file) {
   return JSON.parse(readFileSync(file, 'utf8'));
 }
@@ -35,6 +39,14 @@ if(!convertNoArgHelp.includes('Usage: bbb-dmx-convert') || !convertNoArgHelp.inc
 const lintNoArgHelp = cliOutput('lint', []);
 if(!lintNoArgHelp.includes('Usage: bbb-dmx-lint') || !lintNoArgHelp.includes('--fixture-dir')) {
   throw new Error(`bbb-dmx-lint without args should print CLI help, got: ${lintNoArgHelp}`);
+}
+const npmConvertHelp = npmOutput(['convert', '--', '--help']);
+if(!npmConvertHelp.includes('Usage: bbb-dmx-convert')) {
+  throw new Error(`npm run convert should expose converter help, got: ${npmConvertHelp}`);
+}
+const npmLintHelp = npmOutput(['lint', '--', '--help']);
+if(!npmLintHelp.includes('Usage: bbb-dmx-lint')) {
+  throw new Error(`npm run lint should expose linter help, got: ${npmLintHelp}`);
 }
 
 run(['convert', join(root, 'test/minimal.gdtf.xml'), '--format', 'gdtf-xml', '--out-dir', join(temp, 'xml'), '--overwrite']);

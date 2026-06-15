@@ -19,6 +19,8 @@ documentation, and JSON Schemas live in the `2bbb/bbb-dmx` submodule at
 git submodule update --init --recursive
 npm install
 npm run build  # generates ignored dist/ CLI entrypoints
+npm run convert -- --help
+npm run lint -- --help
 npm run smoke
 ```
 
@@ -31,7 +33,7 @@ npm run smoke
 git submodule update --init --recursive
 npm install
 npm run build
-npm run web -- --port 4173
+npm run fixture-editor -- --port 4173
 # open http://127.0.0.1:4173
 ```
 
@@ -50,8 +52,8 @@ This is not a lighting-console UI and it does not output DMX. Treat conversion w
 ## Examples
 
 ```sh
-node dist/index.js convert path/to/fixture.gdtf --out-dir converted --overwrite
-node dist/index.js convert path/to/scene.mvr --out-dir converted --patch patches/from-mvr.json --overwrite
-node dist/index.js convert path/to/ma3-fixture.xml --format ma3 --out-dir converted --overwrite
-node dist/lint.js patches/example.json --fixture-dir fixtures --strict
+npm run convert -- convert path/to/fixture.gdtf --out-dir converted --overwrite
+npm run convert -- convert path/to/scene.mvr --out-dir converted --patch patches/from-mvr.json --overwrite
+npm run convert -- convert path/to/ma3-fixture.xml --format ma3 --out-dir converted --overwrite
+npm run lint -- patches/example.json --fixture-dir fixtures --strict
 ```
