@@ -6,6 +6,13 @@
         <Beam BeamAngle="4.5" FieldAngle="25.0" BeamRadius="0.052" LuminousFlux="1000" ColorTemperature="6500" />
       </Geometry>
     </Geometries>
+    <Wheels>
+      <Wheel Name="ColorWheel1">
+        <Slot Name="Open" Color="{0.3127,0.3290,100}" />
+        <Slot Name="Red" Color="{0.64,0.33,100}" />
+        <Slot Name="Blue" Color="{0.15,0.06,100}" />
+      </Wheel>
+    </Wheels>
     <DMXModes>
       <DMXMode Name="Basic">
         <DMXChannels>
@@ -49,6 +56,15 @@
               <ChannelFunction Attribute="Shutter1StrobePulse" Name="Pulse" DMXFrom="128/1" />
               <ChannelFunction Attribute="Shutter1StrobeRandom" Name="Random" DMXFrom="192/1" />
               <ChannelFunction Attribute="Shutter1" Name="Open" DMXFrom="224/1" />
+            </LogicalChannel>
+          </DMXChannel>
+          <DMXChannel Offset="10" Default="0/1">
+            <LogicalChannel Attribute="ColorWheel">
+              <ChannelFunction Attribute="ColorWheel" Name="Color Wheel" Wheel="ColorWheel1" DMXFrom="0/1">
+                <ChannelSet Name="Open" DMXFrom="0/1" WheelSlotIndex="1" />
+                <ChannelSet Name="Red" DMXFrom="10/1" WheelSlotIndex="2" />
+                <ChannelSet Name="Blue" DMXFrom="20/1" WheelSlotIndex="3" />
+              </ChannelFunction>
             </LogicalChannel>
           </DMXChannel>
         </DMXChannels>

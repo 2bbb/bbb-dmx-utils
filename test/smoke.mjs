@@ -49,6 +49,21 @@ for(const [index, expected] of expectedShutterRanges.entries()) {
     }
   }
 }
+const wheels = minimalProfile.wheels;
+if(!Array.isArray(wheels) || wheels[0]?.id !== 'colorwheel1' || wheels[0]?.type !== 'color') {
+  throw new Error(`GDTF color wheel metadata was not converted: ${JSON.stringify(wheels)}`);
+}
+if(wheels[0].slots?.[1]?.label !== 'Red' || !Array.isArray(wheels[0].slots?.[1]?.cie_xyY)) {
+  throw new Error(`GDTF color wheel slot color was not preserved: ${JSON.stringify(wheels[0].slots)}`);
+}
+const colorWheelParam = minimalProfile.modes.basic?.parameters?.color;
+if(colorWheelParam?.wheel !== 'colorwheel1') {
+  throw new Error(`GDTF color ChannelFunction Wheel was not linked: ${JSON.stringify(colorWheelParam)}`);
+}
+const colorWheelRanges = colorWheelParam?.ranges;
+if(!Array.isArray(colorWheelRanges) || colorWheelRanges[1]?.wheel_slot !== 2 || colorWheelRanges[1]?.function !== 'red') {
+  throw new Error(`GDTF ChannelSet WheelSlotIndex was not converted: ${JSON.stringify(colorWheelRanges)}`);
+}
 
 const repeatedAttributeXml = `<?xml version="1.0" encoding="UTF-8"?>
 <GDTF>

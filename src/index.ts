@@ -20,8 +20,21 @@ const parameterRangeSchema = z.object({
   to: z.number().int().min(0).max(16777215),
   function: z.string().min(1),
   label: z.string().optional(),
+  wheel: z.string().min(1).optional(),
+  wheel_slot: z.number().int().min(1).optional(),
   physical_from: z.number().optional(),
   physical_to: z.number().optional(),
+});
+
+const wheelSlotSchema = z.object({
+  index: z.number().int().min(1),
+  id: z.string().optional(),
+  label: z.string().optional(),
+  kind: z.string().optional(),
+  rgb: z.tuple([z.number().int().min(0).max(255), z.number().int().min(0).max(255), z.number().int().min(0).max(255)]).optional(),
+  cie_xyY: z.tuple([z.number(), z.number(), z.number()]).optional(),
+  filter: z.string().optional(),
+  media: z.string().optional(),
 });
 
 const fixtureProfileSchema = z.object({
@@ -30,6 +43,12 @@ const fixtureProfileSchema = z.object({
   manufacturer: z.string(),
   model: z.string(),
   photometry: photometrySchema,
+  wheels: z.array(z.object({
+    id: z.string().min(1),
+    label: z.string().optional(),
+    type: z.enum(["color", "gobo", "animation", "prism", "generic"]).optional(),
+    slots: z.array(wheelSlotSchema).optional(),
+  })).optional(),
   modes: z.record(z.object({
     label: z.string(),
     footprint: z.number().int().min(1),
@@ -46,6 +65,7 @@ const fixtureProfileSchema = z.object({
       channels: z.array(z.string()).optional(),
       byte_order: z.enum(["coarsefine", "finecoarse", "coarsemidfine", "finemidcoarse"]).optional(),
       range_degrees: z.number().optional(),
+      wheel: z.string().min(1).optional(),
       ranges: z.array(parameterRangeSchema).min(2).optional(),
       default: z.number().int().min(0).optional(),
     })).optional(),
@@ -388,7 +408,22 @@ function rangePhysical(node: unknown, fallbackNode: unknown): Pick<NonNullable<F
   return out;
 }
 
-function parameterRangesForChannel(channelNode: unknown, width: number): FixtureParameter["ranges"] | undefined {
+type ParameterRangeInfo = {
+  ranges: FixtureParameter["ranges"];
+  wheel: string | undefined;
+};
+
+function wheelNameForFunction(functionNode: unknown): string | undefined {
+  const raw = attr(functionNode, ["Wheel", "wheel", "WheelName", "wheelName"]);
+  return raw ? sanitizeKey(raw, raw) : undefined;
+}
+
+function wheelSlotIndexForNode(node: unknown): number | undefined {
+  const value = numberAttr(node, ["WheelSlotIndex", "wheelSlotIndex", "WheelSlot", "wheelSlot", "Slot", "slot"]);
+  return value !== undefined && Number.isFinite(value) && 0 < value ? Math.round(value) : undefined;
+}
+
+function parameterRangesForChannel(channelNode: unknown, width: number): ParameterRangeInfo | undefined {
   const logical = logicalChannelForChannel(channelNode);
   const logicalAttribute = attr(logical, ["Attribute", "attribute", "Name", "name"]);
   const functionNodes = channelFunctionsForChannel(channelNode);
@@ -406,6 +441,7 @@ function parameterRangesForChannel(channelNode: unknown, width: number): Fixture
   if(functionStarts.length === 0) return undefined;
   const domainMax = domainMaxForWidth(width);
   const ranges: NonNullable<FixtureParameter["ranges"]> = [];
+  let wheel: string | undefined;
   let hasSubdivision = false;
 
   for(let index = 0; index < functionStarts.length; index++) {
@@ -415,6 +451,8 @@ function parameterRangesForChannel(channelNode: unknown, width: number): Fixture
     const functionTo = Math.max(functionFrom, Math.min(domainMax, (next?.from ?? (domainMax + 1)) - 1));
     const functionName = nodeName(entry.node);
     const attributeName = channelFunctionAttribute(entry.node, logicalAttribute);
+    const functionWheel = wheelNameForFunction(entry.node);
+    if(wheel === undefined && functionWheel !== undefined) wheel = functionWheel;
     const setStarts = channelSetsForFunction(entry.node)
       .map((node, setIndex) => ({
         node,
@@ -432,20 +470,26 @@ function parameterRangesForChannel(channelNode: unknown, width: number): Fixture
         const nextSet = setStarts[setIndex + 1];
         const from = Math.max(functionFrom, Math.min(functionTo, setEntry.from));
         const to = Math.max(from, Math.min(functionTo, (nextSet?.from ?? (functionTo + 1)) - 1));
+        const wheelSlot = wheelSlotIndexForNode(setEntry.node);
         ranges.push({
           from,
           to,
           function: rangeFunctionSlug(attributeName, setEntry.label, functionName),
           ...(setEntry.label ? { label: setEntry.label } : {}),
+          ...(functionWheel ? { wheel: functionWheel } : {}),
+          ...(wheelSlot !== undefined ? { wheel_slot: wheelSlot } : {}),
           ...rangePhysical(setEntry.node, entry.node),
         });
       }
     } else {
+      const wheelSlot = wheelSlotIndexForNode(entry.node);
       ranges.push({
         from: functionFrom,
         to: functionTo,
         function: rangeFunctionSlug(attributeName, setStarts[0]?.label, functionName),
         ...(setStarts[0]?.label ?? functionName ? { label: setStarts[0]?.label ?? functionName } : {}),
+        ...(functionWheel ? { wheel: functionWheel } : {}),
+        ...(wheelSlot !== undefined ? { wheel_slot: wheelSlot } : {}),
         ...rangePhysical(entry.node, entry.node),
       });
     }
@@ -460,7 +504,7 @@ function parameterRangesForChannel(channelNode: unknown, width: number): Fixture
       from: Math.max(0, Math.min(domainMax, range.from)),
       to: Math.max(0, Math.min(domainMax, range.to)),
     }));
-  return normalized.length >= 2 ? normalized : undefined;
+  return normalized.length >= 2 ? { ranges: normalized, wheel } : undefined;
 }
 
 function modeChannels(modeNode: unknown): unknown[] {
@@ -477,6 +521,90 @@ function firstFiniteNumber(...values: Array<string | undefined>): number | undef
     if(Number.isFinite(number)) return number;
   }
   return undefined;
+}
+
+function parseColorNumbers(text: string | undefined): number[] | undefined {
+  if(text === undefined) return undefined;
+  const values = text
+    .replace(/[{}]/g, " ")
+    .split(/[\s,;]+/)
+    .map((part) => Number(part.replace(",", ".")))
+    .filter((value) => Number.isFinite(value));
+  return values.length >= 3 ? values.slice(0, 3) : undefined;
+}
+
+function colorNameToRgb(name: string | undefined): [number, number, number] | undefined {
+  const normalized = (name ?? "").toLowerCase();
+  if(/\bopen\b|white/.test(normalized)) return [255, 255, 255];
+  if(/red/.test(normalized)) return [255, 0, 0];
+  if(/green/.test(normalized)) return [0, 255, 0];
+  if(/blue/.test(normalized)) return [0, 0, 255];
+  if(/cyan/.test(normalized)) return [0, 255, 255];
+  if(/magenta|pink/.test(normalized)) return [255, 0, 255];
+  if(/yellow/.test(normalized)) return [255, 255, 0];
+  if(/amber|orange/.test(normalized)) return [255, 115, 0];
+  if(/lime/.test(normalized)) return [115, 255, 0];
+  if(/purple|violet|\buv\b/.test(normalized)) return [115, 0, 255];
+  return undefined;
+}
+
+function wheelTypeFromName(name: string): NonNullable<NonNullable<FixtureProfile["wheels"]>[number]["type"]> {
+  const normalized = name.toLowerCase();
+  if(/color|colour|cto|ctb|ctc/.test(normalized)) return "color";
+  if(/gobo/.test(normalized)) return "gobo";
+  if(/anim/.test(normalized)) return "animation";
+  if(/prism/.test(normalized)) return "prism";
+  return "generic";
+}
+
+function fixtureWheelsFromGdtf(fixtureType: unknown): FixtureProfile["wheels"] {
+  const wheelNodes = asArray(child(child(fixtureType, "Wheels"), "Wheel"));
+  const looseWheelNodes = wheelNodes.length > 0 ? wheelNodes : findNodes(fixtureType, "Wheel");
+  const wheels: NonNullable<FixtureProfile["wheels"]> = [];
+  for(const [wheelIndex, wheelNode] of looseWheelNodes.entries()) {
+    const label = attr(wheelNode, ["Name", "name", "LongName", "longName", "Label", "label"]) ?? `Wheel ${wheelIndex + 1}`;
+    const id = sanitizeKey(label, `wheel${wheelIndex + 1}`);
+    const slotNodes = [
+      ...asArray(child(wheelNode, "Slot")),
+      ...asArray(child(child(wheelNode, "Slots"), "Slot")),
+    ];
+    const slots: NonNullable<NonNullable<FixtureProfile["wheels"]>[number]["slots"]> = [];
+    for(const [slotIndex, slotNode] of slotNodes.entries()) {
+      const slotLabel = attr(slotNode, ["Name", "name", "LongName", "longName", "Label", "label"]) ?? `Slot ${slotIndex + 1}`;
+      const colorValues = parseColorNumbers(attr(slotNode, ["Color", "color", "ColorCIE", "colorCIE", "CIE", "cie"]));
+      const rgbValues = parseColorNumbers(attr(slotNode, ["RGB", "rgb", "sRGB", "srgb"]));
+      const namedRgb = colorNameToRgb(slotLabel);
+      const slot: NonNullable<NonNullable<FixtureProfile["wheels"]>[number]["slots"]>[number] = {
+        index: slotIndex + 1,
+        id: sanitizeKey(slotLabel, `slot${slotIndex + 1}`),
+        label: slotLabel,
+        kind: /\bopen\b/i.test(slotLabel) ? "open" : "color",
+      };
+      if(rgbValues) {
+        slot.rgb = [
+          Math.max(0, Math.min(255, Math.round(rgbValues[0]!))),
+          Math.max(0, Math.min(255, Math.round(rgbValues[1]!))),
+          Math.max(0, Math.min(255, Math.round(rgbValues[2]!))),
+        ];
+      } else if(colorValues) {
+        slot.cie_xyY = [colorValues[0]!, colorValues[1]!, colorValues[2]!];
+      } else if(namedRgb) {
+        slot.rgb = namedRgb;
+      }
+      const filter = attr(slotNode, ["Filter", "filter"]);
+      const media = attr(slotNode, ["MediaFileName", "mediaFileName", "Media", "media"]);
+      if(filter) slot.filter = filter;
+      if(media) slot.media = media;
+      slots.push(slot);
+    }
+    wheels.push({
+      id,
+      label,
+      type: wheelTypeFromName(label),
+      ...(slots.length > 0 ? { slots } : {}),
+    });
+  }
+  return wheels.length > 0 ? wheels : undefined;
 }
 
 function photometryFromGdtf(fixtureType: unknown): FixtureProfile["photometry"] {
@@ -512,7 +640,7 @@ function profileFromGdtfXml(xml: string, source: string, prefix: string): Conver
     const channelNodes = modeChannels(modeNode);
     const channelsByOffset = new Map<number, FixtureChannel>();
     const usedParameterKeys = new Set<string>();
-    const parameterChannels = new Map<string, { keys: string[]; defaults: number[]; range: number | undefined; ranges: FixtureParameter["ranges"] | undefined }>();
+    const parameterChannels = new Map<string, { keys: string[]; defaults: number[]; range: number | undefined; ranges: FixtureParameter["ranges"] | undefined; wheel: string | undefined }>();
 
     for(const [channelIndex, channelNode] of channelNodes.entries()) {
       const offsets = parseOffsetList(attr(channelNode, ["Offset", "offset", "DMXOffset", "dmxOffset", "Address", "address"]));
@@ -523,7 +651,7 @@ function profileFromGdtfXml(xml: string, source: string, prefix: string): Conver
       const fn = functionForChannel(channelNode);
       const range = physicalRangeDegrees(channelNode);
       const defaults = dmxBytesForChannel(channelNode, fn, offsets.length);
-      const ranges = parameterRangesForChannel(channelNode, offsets.length);
+      const rangeInfo = parameterRangesForChannel(channelNode, offsets.length);
       const keys: string[] = [];
 
       offsets.forEach((offset, byteIndex) => {
@@ -543,9 +671,10 @@ function profileFromGdtfXml(xml: string, source: string, prefix: string): Conver
           existing.keys.push(...keys);
           existing.defaults.push(...defaults);
           if(existing.range === undefined && range !== undefined) existing.range = range;
-          if(existing.ranges === undefined && ranges !== undefined) existing.ranges = ranges;
+          if(existing.ranges === undefined && rangeInfo?.ranges !== undefined) existing.ranges = rangeInfo.ranges;
+          if(existing.wheel === undefined && rangeInfo?.wheel !== undefined) existing.wheel = rangeInfo.wheel;
         } else {
-          parameterChannels.set(paramKey, { keys, defaults, range, ranges });
+          parameterChannels.set(paramKey, { keys, defaults, range, ranges: rangeInfo?.ranges, wheel: rangeInfo?.wheel });
         }
       }
     }
@@ -568,6 +697,9 @@ function profileFromGdtfXml(xml: string, source: string, prefix: string): Conver
       }
       if((paramKey === "pan" || paramKey.startsWith("pan_") || paramKey === "tilt" || paramKey.startsWith("tilt_")) && info.range !== undefined) {
         parameter.range_degrees = info.range;
+      }
+      if(info.wheel !== undefined) {
+        parameter.wheel = info.wheel;
       }
       if(info.ranges && info.ranges.length >= 2) {
         parameter.ranges = info.ranges;
@@ -592,6 +724,8 @@ function profileFromGdtfXml(xml: string, source: string, prefix: string): Conver
   };
   const photometry = photometryFromGdtf(fixtureType);
   if(photometry) profile.photometry = photometry;
+  const wheels = fixtureWheelsFromGdtf(fixtureType);
+  if(wheels) profile.wheels = wheels;
   fixtureProfileSchema.parse(profile);
   return { profile, source, suggestedFile: `${profile.key}.json` };
 }

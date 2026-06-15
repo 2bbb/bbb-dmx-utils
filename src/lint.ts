@@ -21,7 +21,8 @@ type FixtureProfile = {
       type: string;
       channel?: string;
       channels?: string[];
-      ranges?: Array<{ from: number; to: number; function: string; label?: string; physical_from?: number; physical_to?: number }>;
+      wheel?: string;
+      ranges?: Array<{ from: number; to: number; function: string; label?: string; wheel?: string; wheel_slot?: number; physical_from?: number; physical_to?: number }>;
     }>;
   }>;
 };
