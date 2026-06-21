@@ -2,7 +2,7 @@
 
 ## Source of truth
 - Status: Draft
-- Last refreshed: 2026-06-13
+- Last refreshed: 2026-06-21
 - Primary product surfaces: Node-hosted browser fixture/fixture-coordinate editor for `bbb.dmx` JSON.
 - Evidence reviewed:
   - `README.md`: CLI utilities currently convert GDTF/MVR/MA3 and lint JSON.
@@ -20,6 +20,7 @@
   - Import GDTF/MVR/MA3-related files and convert them into `bbb.dmx` profiles/patches.
   - Let users customize fixture metadata, channel definitions, and patch coordinates without hand-editing every JSON file.
   - Validate edited data against the shared `bbb-dmx` schemas and semantic lint rules before export.
+  - Build setup-era support files, especially `semantic_overrides.json`, with structured controls where valid values can be derived from loaded profiles.
 - Non-goals:
   - DMX network output.
   - Full lighting-console replacement.
@@ -52,6 +53,10 @@
   - Import controls and warnings first.
   - Profile list and selected profile/mode/channel/parameter editor.
   - Patch fixture profile/mode/address/coordinate table.
+  - Semantic overrides profile/mode editor:
+    - aliases use canonical alias suggestions plus target-parameter selects;
+    - intensity uses checkboxes and a primary select;
+    - RGB/CMY blocks use role-specific target-parameter selects.
   - Raw JSON and validation/export actions.
 
 ## Design principles
@@ -75,6 +80,8 @@
   - Mode channel table.
   - Basic parameter/function reference table.
   - Patch profile/mode/address/coordinate table.
+  - Structured semantic_overrides editor with profile/mode selectors, alias rows, intensity checklist, RGB blocks, and CMY blocks.
+  - Schema-aware support for setup/groups/matrixmap/semantic_overrides validation.
   - JSON textarea editor.
   - Schema and semantic lint warning/error panel.
   - Download/export controls.
@@ -116,3 +123,4 @@
 ## Open questions
 - [ ] Whether to add a 2D/3D coordinate viewport after the data editor stabilizes / owner: project / impact: medium.
 - [ ] Whether full range/function editing should become structured UI or remain raw JSON-first / owner: project / impact: medium.
+- [ ] Whether setup/groups/matrixmap deserve the same level of structured editing as semantic_overrides or should stay schema/raw-first for now / owner: project / impact: medium.

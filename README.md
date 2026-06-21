@@ -40,9 +40,10 @@ npm run fixture-editor -- --port 4173
 The editor currently supports:
 
 - `.gdtf`, `.mvr`, GDTF `description.xml`, and compatible MA3 XML conversion through the same converter core as `bbb-dmx-convert`.
-- reopening converted `bbb.dmx` JSON files: fixture profiles, one patch file, converter result JSON, or arrays of profile documents.
+- reopening converted `bbb.dmx` JSON files: fixture profiles, one patch file, `semantic_overrides.json`, converter result JSON, or arrays of profile documents.
 - profile metadata/key editing, mode channel editing, basic parameter/function reference editing, plus raw profile JSON editing.
 - MVR patch fixture editing (`profile`, `mode`, `universe`, `address`, `position`, `rotation`).
+- structured `semantic_overrides` editing: profile/mode selects from loaded profiles, alias target selects, intensity parameter checklist, and RGB/CMY role-to-parameter mapping.
 - schema validation through `libs/bbb-dmx/schemas`.
 - semantic linting for profile/channel references, patch profile/mode references, footprint overflow, duplicate fixture ids, and DMX address overlap.
 - per-file JSON download and bulk download.
